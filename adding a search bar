@@ -1,0 +1,56 @@
+# chat_app.py (simplified and fictional Python backend)
+
+from flask import Flask, request, jsonify
+import pymongo
+
+app = Flask(__name__)
+
+# Initialize MongoDB client and set the database and collection
+client = pymongo.MongoClient("mongodb://localhost:27017/")
+db = client["samplechat_db"]
+collection = db["messages"]
+
+@app.route('/search_messages', methods=['POST'])
+def search_messages():
+    query = request.json['query']
+    results = collection.find({"message": {"$regex": query, "$options": "i"}})
+    return jsonify(list(results))
+
+
+
+#JavaScript below
+// SearchBar.js (simplified and fictional React component)
+
+import React, { useState } from 'react';
+import axios from 'axios';
+
+function SearchBar() {
+    const [query, setQuery] = useState('');
+    const [results, setResults] = useState([]);
+
+    const handleSearch = async () => {
+        try {
+            const response = await axios.post('/search_messages', { query: query });
+            setResults(response.data);
+        } catch (error) {
+            console.error("Error searching messages:", error);
+        }
+    };
+
+    return (
+        <div>
+            <input 
+                type="text" 
+                value={query} 
+                onChange={(e) => setQuery(e.target.value)} 
+                placeholder="Search messages..."
+            />
+            <button onClick={handleSearch}>Search</button>
+            <ul>
+                {results.map(result => <li key={result._id}>{result.message}</li>)}
+            </ul>
+        </div>
+    );
+}
+
+export default SearchBar;
